@@ -146,8 +146,8 @@ class SmartTrade(object):
         self._create_optimizer()
         self._create_summary()
 
-def train(trade, train_set, val_set, train_steps=10000, batch_size=32, keep_rate=1.):
-    initial_stap = 1
+def train(trade, train_set, val_set, train_steps=10000, batch_size=32, keep_prob=1.):
+    initial_step = 1
     val_features = val_set.images
     val_labals = val_set.labels
     VERBOSE_STEP = 10
@@ -158,3 +158,134 @@ def train(trade, train_set, val_set, train_steps=10000, batch_size=32, keep_rate
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         writer = tf.summary.FileWriter("./graphs", sess.graph)
+        for i in range(initial_step, initial_step + train_steps):
+            batch_features, batch_labels = train_set.next_batch(batch_size)
+            _, loss, avg_pos, summary = sess.run([trade.optimizer, trade.loss, trade.avg_position,
+                                                  trade.summary_op],
+                                                 feed_dict={trade.x: batch_features,
+                                                            trade.y: batch_labels,
+                                                            trade.is_training: True,
+                                                            trade.keep_prob: keep_prob})
+            writer.add_summary(summary, global_step=i)
+            if i % VERBOSE_STEP == 0:
+                hint = None
+                if i % VALIDATION_STEP == 0:
+                    val_loss, val_avg_pos = sess.run([trade.loss, trade.avg_position],
+                                                     feed_dict={trade.x: val_features,
+                                                                trade.y: val_labals,
+                                                                trade.is_training: False,
+                                                                trade.keep_prob: 1.})
+                    hint = 'Average Train Loss at step {}: {:.7f} Average position {:.7f}, Validation Loss: {:.7f} Average Position: {:.7f}'.\
+                        format(i, loss, avg_pos, val_loss, val_avg_pos)
+                    if val_loss < min_validation_loss:
+                        min_validation_loss = val_loss
+                        saver.save(sess, "./checlkpoint/best_model", i)
+                else:
+                    hint = 'Average loss at step {}: {:.7f} Average position {:.7f}'.format(i, loss, avg_pos)
+                print(hint)
+
+def calculate_cumulative_return(labels, pred):
+    cr = []
+    if len(labels) <= 0:
+        return cr
+    cr.append(1. * (1. + labels[0] * pred[0]))
+    for l in range(1, len(labels)):
+        cr.append(cr[l - 1] * (1 + labels[l] * pred[l]))
+    for i in range(len(cr)):
+        cr[i] = cr[i] - 1
+    return cr
+
+def predict(val_set, num_step=30, input_size=61, learning_rate=0.001, hidden_size=8, nclasses=1):
+    features = val_set.images
+    labels = val_set.labels
+    trade = SmartTrade(num_step, input_size, learning_rate, hidden_size, nclasses)
+    trade.build_graph()
+    saver = tf.train.Saver()
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoint/checkpoint'))
+        if ckpt and ckpt.model_checkpoint_path:
+            saver.restore(sess, ckpt.model_checkpoint_path)
+        pred, avg_pos = sess.run([trade.position, trade.avg_position],
+                                 feed_dict={trade.x: features, trade.y: labels,
+                                            trade.is_training: False, trade.keep_prob: 1.})
+
+        cr = calculate_cumulative_return(labels, pred)
+        print("changeRate\tpositionAdvice\tprincipal\tcumlativeReturn")
+        for i in range(len(labels)):
+            print(str(labels[i]) + "\t" + str(pred[i]) + "\t" + str(cr[i] + 1.) + "\t" + str(cr[i]))
+
+def main(operation='train', code=None):
+    num_step = 30
+    input_size = 61
+    train_steps = 1000000
+    batch_size = 512
+    learning_rate = 0.001
+    hidden_size = 14
+    nclasses = 1
+    validation_size = 700
+    keep_prob = 0.7
+
+    selector = ["ROCP", "OROCP", "HROCP", "LROCP", "MACD", "RSI", "VROCP", "BOLL", "MA", "VMA", "PRICE_VOLUME"]
+    input_shape = [30, 61]
+
+    if operation == 'train':
+        dataset_dir = "./data"
+        train_features = []
+        train_labels = []
+        val_features = []
+        val_labels = []
+        for filename in os.listdir(dataset_dir):
+            print("processing file: " + filename)
+            filepath = os.path.join(dataset_dir,filename)
+            raw_data = read_sample_data(filepath)
+            moving_features, moving_labels = extract_feature(raw_data=raw_data, selector=selector,
+                                                             window=input_shape[0],
+                                                             with_label=True, flatten=False)
+            train_features.extend(moving_features[:-validation_size])
+            train_labels.extend((moving_labels[:-validation_size]))
+            val_features.extend(moving_features[-validation_size:])
+            val_labels.extend(moving_labels[-validation_size:])
+
+        train_features = numpy.transpose(numpy.asarray(train_features), [0, 2, 1])
+        train_labels = numpy.asarray(train_labels)
+        train_labels = numpy.reshape(train_labels, [train_labels.shape[0], 1])
+        val_features = numpy.transpose(numpy.asarray(val_features), [0, 2, 1])
+        val_labels = numpy.asarray(val_labels)
+        val_labels = numpy.reshape(val_labels, [val_labels.shape[0], 1])
+        train_set = DataSet(train_features, train_labels)
+        val_set = Dataset(val_features, val_labels)
+
+        trade = SmartTrade(num_step, input_size, learning_rate, hidden_size, nclasses)
+        trade.build_graph()
+        train(trade, train_set, val_set, train_steps, batch_size=batch_size, keep_prob=keep_prob)
+    elif operation == "predict":
+        predict_file_path = "./data/000001.csv"
+        if code is not None:
+            predict_file_path = "./data/%s.csv" %code
+        print("processing file %s" %predict_file_path)
+        raw_data = read_sample_data(predict_file_path)
+        moving_features, moving_labels = extract_feature(raw_data=raw_data, selector=selector, window=input_shape[0],
+                                                         with_label=True, flatten=False)
+        moving_features = numpy.asarray(moving_features)
+        moving_features = numpy.transpose(moving_features, [0, 2, 1])
+        moving_labels = numpy.asarray(moving_labels)
+        moving_labels = numpy.reshape(moving_labels, [moving_labels.shape[0], 1])
+
+        val_set = DataSet(moving_features[-validation_size:], moving_labels[-validation_size:])
+        predict(val_set, num_step=num_step, input_size=input_size, learning_rate=learning_rate,
+                hidden_size=hidden_size, nclasses=nclasses)
+    else:
+        print("Operation not supported.")
+
+if __name__ == '__main__':
+    tf.set_random_seed(2)
+    seed(1)
+    operation = "train"
+    code = None
+    if len(sys.argv) > 1:
+        operation = sys.argv[1]
+    if len(sys.argv) > 2:
+        code = sys.argv[2]
+    main(operation, code)
+
