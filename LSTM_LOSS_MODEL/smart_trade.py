@@ -14,6 +14,7 @@ from tensorflow.contrib.rnn import DropoutWrapper
 from tensorflow.python.ops.init_ops import glorot_uniform_initializer, orthogonal_initializer
 from LSTM_LOSS_MODEL.rawdate import RawData, read_sample_data
 from LSTM_LOSS_MODEL.chart import extract_feature
+from LSTM_LOSS_MODEL.dataset import DataSet
 import numpy
 from tensorflow.contrib.layers.python.layers.layers import batch_norm
 import sys
@@ -254,7 +255,7 @@ def main(operation='train', code=None):
         val_labels = numpy.asarray(val_labels)
         val_labels = numpy.reshape(val_labels, [val_labels.shape[0], 1])
         train_set = DataSet(train_features, train_labels)
-        val_set = Dataset(val_features, val_labels)
+        val_set = DataSet(val_features, val_labels)
 
         trade = SmartTrade(num_step, input_size, learning_rate, hidden_size, nclasses)
         trade.build_graph()
