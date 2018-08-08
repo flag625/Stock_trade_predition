@@ -219,7 +219,7 @@ def predict(val_set, num_step=30, input_size=61, learning_rate=0.001, hidden_siz
 def main(operation='train', code=None):
     num_step = 30
     input_size = 61
-    train_steps = 1000000
+    train_steps = 500
     batch_size = 512
     learning_rate = 0.001
     hidden_size = 14
