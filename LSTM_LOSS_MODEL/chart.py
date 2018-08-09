@@ -29,6 +29,7 @@ class ChartFeature(object):
                 x = feature_arr[:, p:p + window]
                 p_change = (close[p + window] - close[p + window - 1]) / close[p + window - 1]
                 y = p_change
+                # 返回一个折叠成一维的数组，"F"按列展平。
                 if flatten:
                     x = x.flatten("F")
                 moving_features.append(numpy.nan_to_num(x))
