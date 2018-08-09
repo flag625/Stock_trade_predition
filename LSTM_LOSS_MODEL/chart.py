@@ -8,6 +8,7 @@
 
 import numpy
 import talib
+from LSTM_LOSS_MODEL.rawdate import read_sample_data
 
 class ChartFeature(object):
     def __init__(self, selector):
@@ -19,6 +20,7 @@ class ChartFeature(object):
                        volumes=None, with_label=True, flatten=True):
         self.extract(open=open, close=close, high=high, low=low,volumes=volumes)
         feature_arr = numpy.asarray(self.feature)
+        print("featurn_arr: " + str(feature_arr.shape))
         p = 0
         rows = feature_arr.shape[0]
         print("feature dimension: %s" %rows)
@@ -32,6 +34,7 @@ class ChartFeature(object):
                 # 返回一个折叠成一维的数组，"F"按列展平。
                 if flatten:
                     x = x.flatten("F")
+                    print("flatten: " + str(x.shape))
                 moving_features.append(numpy.nan_to_num(x))
                 moving_labels.append(y)
                 p += 1
@@ -236,6 +239,8 @@ def extract_feature(raw_data, selector, window=30, with_label=True, flatten=True
 # from LSTM_LOSS_MODEL.rawdate import read_sample_data
 #
 # #test
-# if __name__ == "__main__":
-#     raw_data = read_sample_data("data/000001.csv")
-#     print(extract_feature(raw_data, ["ROCP"]))
+if __name__ == "__main__":
+    raw_data = read_sample_data("data/000001.csv")
+    moving_featrues, moving_labels = extract_feature(raw_data, ["ROCP","MACD"])
+    print("moving_featrun: " +str(moving_featrues.shape))
+    print("moving_labels " + str(moving_labels.shape))
