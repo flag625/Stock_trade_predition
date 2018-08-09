@@ -112,6 +112,8 @@ class SmartTrade(object):
         c : cost
         :return:
         '''
+        # self.x.shape = (batch_size, num_step, input_size)
+        # xx.shape = (num_step, (batch_size, input_size))
         xx = tf.unstack(self.x, self.num_step, 1)
         lstm_cell = rnn.LSTMCell(self.hidden_size, forget_bias=1.0, initializer=orthogonal_initializer())
         dropout_cell = DropoutWrapper(lstm_cell, input_keep_prob=self.keep_prob,
