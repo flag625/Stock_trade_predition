@@ -7,8 +7,10 @@ from tensorflow.contrib import rnn
 from tensorflow.contrib.rnn import DropoutWrapper
 from tensorflow.python.ops.init_ops import glorot_uniform_initializer, orthogonal_initializer
 from tensorflow.contrib.layers.python.layers.layers import batch_norm
+
 import numpy
 from numpy.random import seed
+
 import os
 
 class LSTM_model(object):
