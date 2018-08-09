@@ -17,7 +17,7 @@ def dense_2_one_hot(labels_dense, num_classes):
     return labels_one_hot
 
 class DataSet(object):
-    def __int__(self, images, labels):
+    def __init__(self, images, labels):
         assert images.shape[0] == labels.shape[0], (
             "image.shape: %s labels.shape: %s" %(images.shape,
                                                  labels.shape)
@@ -34,6 +34,10 @@ class DataSet(object):
         return self._images
 
     @property
+    def labels(self):
+        return self._labels
+
+    @property
     def num_examples(self):
         return self._num_examples
 
@@ -48,7 +52,7 @@ class DataSet(object):
         if self._index_in_epoch > self._num_examples:
             #Finished epoch
             self._epochs_completed += 1
-            #Shuffle the data
+            #打乱样本序号顺序
             perm = numpy.arange(self._num_examples)
             numpy.random.shuffle(perm)
             numpy.random.shuffle(perm)
