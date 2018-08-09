@@ -9,6 +9,7 @@ from tensorflow.python.ops.init_ops import glorot_uniform_initializer, orthogona
 from tensorflow.contrib.layers.python.layers.layers import batch_norm
 import numpy
 from numpy.random import seed
+import os
 
 class LSTM_model(object):
     def __init__(self, num_step, input_size, init_learning_rate, hidden_size, nclasses,
@@ -41,6 +42,7 @@ class LSTM_model(object):
         self.y = None
         self.is_training = None
         self.loss = None # 损失函数
+        self.output = None # 输出
 
     def _create_learning_rate(self):
         '''
@@ -139,6 +141,7 @@ class LSTM_model(object):
         scope = "activation_batch_norm"
         # 对LSTM 的 输出 进行标准化
         norm_signal = self.batch_norm_layer(signal, scope=scope)
+        self.output = tf.nn.relu6(norm_signal, name="relu_limit") / 6
         # self.loss = "损失函数公式"
 
     def _create_optimizer(self):
@@ -157,6 +160,8 @@ class LSTM_model(object):
         tf.summary.scalar("loss", self.loss)
         # 显示直方图信息
         tf.summary.histogram("histogram loss", self.loss)
+        tf.summary.scalar("output", self.output)
+        tf.summary.histogram("histogram output", self.output)
         # 将所有summary全部保存到磁盘，以便tensorboard显示。
         self.summary_op = tf.summary.merge_all()
 
@@ -169,5 +174,65 @@ class LSTM_model(object):
         self._create_summary()
 
 
+def train(model, train_set, val_feature, val_labels, train_steps=10000, batch_size=32, keep_prob=1.):
+    initial_step = 1
+    VERBOSE_STEP = int(len(val_feature) / batch_size)
+    VALIDATION_STEP = VERBOSE_STEP * 100
 
+    # Saver类提供了向checkpoints文件保存和从checkpoints文件中恢复变量的相关方法。
+    # Checkpoints文件是一个二进制文件，它把变量名映射到对应的tensor值 。
+    saver = tf.train.Saver()
+    min_validation_loss = 100000000.
+    with tf.Session() as sess:
+        # 初始化模型的参数
+        sess.run(tf.global_variables_initializer())
+        # 将摘要协议缓冲区写入事件文件
+        writer = tf.summary.FileWriter("./graphs", sess.graph)
+        for i in range(initial_step, initial_step + train_steps):
+            batch_features, batch_labels = train_set.next_batch(batch_size)
+            _, loss, output, summary = sess.run([model.optimizer, model.loss, model.output, model.summary_op],
+                                                 feed_dict={model.x: batch_features, model.y: batch_labels,
+                                                            model.is_training: True, model.keep_prob: keep_prob})
+            writer.add_summary(summary, global_step=i)
+            if i % VERBOSE_STEP == 0:
+                val_loss, val_output = sess.run([model.loss, model.output],
+                                    feed_dict={model.x: val_feature,model.y: val_labels,
+                                               model.is_training: False, model.keep_prob: 1.0})
+                hint = 'Average Train Loss at step {}: {:.7f} Output {:.7f}, Validation Loss: {:.7f} Output: {:.7f}'.\
+                    format(i, loss, output, val_loss, val_output)
+                if val_loss < min_validation_loss:
+                    min_validation_loss = val_loss
+                    saver.save(sess, "./checkpoint/best_model", i)
+            else:
+                hint = 'Average loss at step {}: {:.7f} Output {:.7f}'.format(i, loss, output)
+            print(hint)
 
+def calculate_cumulative_return(labels, preb):
+    cr = []
+    if len(labels) <= 0:
+        return cr
+    cr.append(1. * (1. + labels[0] * preb[0]))
+    for l in range(1,len(labels)):
+        cr.append(cr[l - 1] * (1 + labels[l] * preb[l]))
+    for i in range(len(cr)):
+        cr[i] = cr[i] - 1
+    return cr
+
+def predict(val_feature, val_labels, num_step, input_size, learning_rate, hidden_size, nclassess):
+    features = val_feature
+    labels = val_labels
+    model = LSTM_model(num_step, input_size, learning_rate, hidden_size, nclassess)
+    model.build_graph()
+    saver = tf.train.Saver()
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoint/checkpoint'))
+        if ckpt and ckpt.model_checkpoint_path:
+            saver.restore(sess, ckpt.model_checkpoint_path)
+        pred = sess.run([model.output],
+                        feed_dict={model.x: features, model.y: labels,
+                                   model.is_training:False, model.keep_prob: 1.})
+        cr = calculate_cumulative_return(labels, pred)
+        print("changeRate\tpositionAdvice\tprincipal\tcumulativeReturn")
+        for i in range(len(labels)):
+            print(str(labels[i]) + "\t" + str(pred[i]) + "\t" + str(cr[i] + 1.) + "\t" + str(cr[i]))
