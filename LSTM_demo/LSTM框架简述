@@ -46,7 +46,7 @@ LSTM框架构建简述--tensorflow
       summary_op = tf.summary.merge_all()
 
 3、训练架构
-   a) 设置参数，包括训练集，测试集，batch_size等。
+   a) 设置参数，包括训练集，测试集，batch_size，迭代次数等。
 
    b) 设定保存类。
       saver = tf.train.Saver()
@@ -54,7 +54,8 @@ LSTM框架构建简述--tensorflow
       Saver类提供了向checkpoints文件保存和从checkpoints文件中恢复变量的相关方法。
       Checkpoints文件是一个二进制文件，它把变量名映射到对应的tensor值 。
 
-   c) 打开会话 session，初始化模型的参数，将执行过程的数据写入事件文件，并向graph传入变量数值来执行训练操作，并返回所需数据。
+   c) 打开会话 session，初始化模型的参数，将执行过程的数据写入事件文件，并向graph传入变量数值来执行所需数据的训练操作，
+   并返回数据。
         训练：
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -64,5 +65,13 @@ LSTM框架构建简述--tensorflow
 
         测试：
         同理如上，但传入测试集数值，测试训练参数，保存最优模型。
+
+4、预测架构
+   与训练架构同理，但：
+   1）需要提取训练模型的参数值。
+        ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoint/checkpoint'))
+        saver.restore(sess, ckpt.model_checkpoint_path)
+   2）输出与预测值相关的数据。
+
 
 
