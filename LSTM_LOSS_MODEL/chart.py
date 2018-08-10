@@ -239,8 +239,8 @@ def extract_feature(raw_data, selector, window=30, with_label=True, flatten=True
 # from LSTM_LOSS_MODEL.rawdate import read_sample_data
 #
 # #test
-if __name__ == "__main__":
-    raw_data = read_sample_data("data/000001.csv")
-    moving_featrues, moving_labels = extract_feature(raw_data, ["ROCP","MACD"])
-    print("moving_featrun: " +str(moving_featrues.shape))
-    print("moving_labels " + str(moving_labels.shape))
+# if __name__ == "__main__":
+#     raw_data = read_sample_data("data/000001.csv")
+#     moving_featrues, moving_labels = extract_feature(raw_data, ["ROCP","MACD"])
+#     print("moving_featrun: " +str(moving_featrues.shape))
+#     print("moving_labels " + str(moving_labels.shape))
