@@ -40,8 +40,8 @@ class LSTM_model(object):
         self.weights = None # 权重
         self.biases = None # 偏置
         self.keep_prob = None
-        self.x = None
-        self.y = None
+        self.X = None
+        self.Y = None
         self.is_training = None
         self.loss = None # 损失函数
         self.output = None # 输出
@@ -81,8 +81,8 @@ class LSTM_model(object):
             # dtype：数据类型。常用的是tf.float32, tf.float64等数值类型。
             # shape：数据形状。默认是None，就是一维值，也可以是多维，比如[2, 3], [None, 3]表示列是3，行不定。
             # name：名称。
-            self.x = tf.placeholder(tf.float32, shape=[None, self.num_step, self.input_size], name="input_feature")
-            self.y = tf.placeholder(tf.float32, shape=[None, 1], name="output")
+            self.X = tf.placeholder(tf.float32, shape=[None, self.num_step, self.input_size], name="input_feature")
+            self.Y = tf.placeholder(tf.float32, shape=[None, 1], name="output")
             self.is_training = tf.placeholder(tf.bool, name="mode")
             self.keep_prob = tf.placeholder(tf.float32, name="keep_prob")
 
@@ -129,8 +129,8 @@ class LSTM_model(object):
         '''
         # #储存在内存中
         # with tf.device("/cpu:0"):
-        # 矩阵分解,沿列第self.num_step个维分解，将张量 self.x 分割成 self.num_step 个张量数组
-        xx = tf.unstack(self.x, self.num_step, 1)
+        # 矩阵分解,沿列第self.num_step个维分解，将张量 self.X 分割成 self.num_step 个张量数组[batch_size, input_size]
+        XX = tf.unstack(self.X, self.num_step, 1)
 
         # 建立LSTM cell
         # orthogonal_initializer()：正交矩阵的初始化器
@@ -138,12 +138,12 @@ class LSTM_model(object):
         dropout_cell = DropoutWrapper(lstm_cell, input_keep_prob=self.keep_prob,
                                       output_keep_prob=self.keep_prob, state_keep_prob=self.keep_prob)
         # LSTM层的 输出 和 状态
-        outputs, states = rnn.static_rnn(dropout_cell, xx, dtype=tf.float32)
+        outputs, states = rnn.static_rnn(dropout_cell, XX, dtype=tf.float32)
         signal = tf.matmul(outputs[-1], self.weights['out']) + self.biases['out']
         scope = "activation_batch_norm"
         # 对LSTM 的 输出 进行标准化
         norm_signal = self.batch_norm_layer(signal, scope=scope)
-        self.output = tf.nn.relu6(norm_signal, name="relu_limit") / 6
+        self.output = tf.nn.relu6(norm_signal, name="relu_limit") / 6.
         # self.loss = "损失函数公式"
 
     def _create_optimizer(self):
@@ -176,9 +176,11 @@ class LSTM_model(object):
         self._create_summary()
 
 
-def train(model, train_set, val_feature, val_labels, train_steps=10000, batch_size=32, keep_prob=1.):
+def train(model, train_set, val_set, train_steps=10000, batch_size=32, keep_prob=1.):
     initial_step = 1
-    VERBOSE_STEP = int(len(val_feature) / batch_size)
+    val_features = val_set.images
+    val_labels = val_set.lebels
+    VERBOSE_STEP = 10 # int(len(train_feature) / batch_size)
     VALIDATION_STEP = VERBOSE_STEP * 100
 
     # Saver类提供了向checkpoints文件保存和从checkpoints文件中恢复变量的相关方法。
@@ -193,21 +195,24 @@ def train(model, train_set, val_feature, val_labels, train_steps=10000, batch_si
         for i in range(initial_step, initial_step + train_steps):
             batch_features, batch_labels = train_set.next_batch(batch_size)
             _, loss, output, summary = sess.run([model.optimizer, model.loss, model.output, model.summary_op],
-                                                 feed_dict={model.x: batch_features, model.y: batch_labels,
+                                                 feed_dict={model.X: batch_features, model.Y: batch_labels,
                                                             model.is_training: True, model.keep_prob: keep_prob})
             writer.add_summary(summary, global_step=i)
+            # 每10次迭代更新损失函数和输出值。
             if i % VERBOSE_STEP == 0:
-                val_loss, val_output = sess.run([model.loss, model.output],
-                                    feed_dict={model.x: val_feature,model.y: val_labels,
-                                               model.is_training: False, model.keep_prob: 1.0})
-                hint = 'Average Train Loss at step {}: {:.7f} Output {:.7f}, Validation Loss: {:.7f} Output: {:.7f}'.\
-                    format(i, loss, output, val_loss, val_output)
-                if val_loss < min_validation_loss:
-                    min_validation_loss = val_loss
-                    saver.save(sess, "./checkpoint/best_model", i)
-            else:
-                hint = 'Average loss at step {}: {:.7f} Output {:.7f}'.format(i, loss, output)
-            print(hint)
+                hint = None
+                if i % VALIDATION_STEP == 0:
+                    val_loss, val_output = sess.run([model.loss, model.output],
+                                        feed_dict={model.X: val_features,model.Y: val_labels,
+                                                   model.is_training: False, model.keep_prob: 1.})
+                    hint = 'Average Train Loss at step {}: {:.7f} Output {:.7f}, Validation Loss: {:.7f} Output: {:.7f}'.\
+                        format(i, loss, output, val_loss, val_output)
+                    if val_loss < min_validation_loss:
+                        min_validation_loss = val_loss
+                        saver.save(sess, "./checkpoint/best_model", i)
+                else:
+                    hint = 'Average loss at step {}: {:.7f} Output {:.7f}'.format(i, loss, output)
+                print(hint)
 
 def calculate_cumulative_return(labels, preb):
     cr = []
@@ -232,9 +237,68 @@ def predict(val_feature, val_labels, num_step, input_size, learning_rate, hidden
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
         pred = sess.run([model.output],
-                        feed_dict={model.x: features, model.y: labels,
+                        feed_dict={model.X: features, model.Y: labels,
                                    model.is_training:False, model.keep_prob: 1.})
         cr = calculate_cumulative_return(labels, pred)
         print("changeRate\tpositionAdvice\tprincipal\tcumulativeReturn")
         for i in range(len(labels)):
             print(str(labels[i]) + "\t" + str(pred[i]) + "\t" + str(cr[i] + 1.) + "\t" + str(cr[i]))
+
+def main(operation='train'):
+    # 第一步：设置参数
+    num_step = None
+    input_size = None
+    batch_size = None
+    learning_rate = None
+    hidden_size = None
+    nclasses = None
+    validation_size = None
+    keep_rate = None
+
+    selector = None  # 参数值类型选择，列表类型。
+
+    # 第二步：执行训练或预测：
+    if operation == "train":
+        train_features = []
+        train_labels = []
+        val_features = []
+        val_labels = []
+        # 1、读取原始数据：rawdata.py
+        raw_data = None
+        # 2、提取特征值，划分window(num_step)，得到格式为[n, input_size, num_step]矩阵：chart.py
+        moving_features = None # 从raw_data中生成。
+        moving_labels = None # 从raw_data中生成。
+        # 3、划分训练集和测试集
+        train_features.extend(moving_features[:-validation_size])
+        val_features.extend(moving_features[-validation_size:])
+        train_labels.extend(moving_labels[:-validation_size])
+        val_labels.extend(moving_labels[-validation_size:])
+        # 4、训练集转置并转化为类，使用next_batch在每次迭代中输入合适的[batch_size, num_step, input_size]矩阵：dataset.py
+        train_features = numpy.transpose(numpy.asarray(train_features),[0, 2, 1])
+        train_labels = numpy.asarray(train_labels)
+        train_labels = numpy.reshape(train_labels, [train_labels.shape[0], 1])
+        val_features = numpy.transpose(numpy.asarray([val_features]), [0, 2, 1])
+        val_labels = numpy.asarray(val_labels)
+        val_labels = numpy.reshape(val_labels, [val_labels.shape[0], 1])
+        # 整合features 和 labels 集合在 DataSet 类， 利用next_batch迭代输入batch_size个数据。
+        train_set = None
+        val_set = None
+        # 5、创建LSTM_model类实例，执行train函数
+        model = LSTM_model(num_step, input_size, learning_rate, hidden_size, nclasses)
+        model.build_graph()
+        train(model, train_set, val_set, train_set, batch_size=batch_size, keep_rate=keep_rate)
+    elif operation == "predict":
+        # 1、读取原始数据：rawdata.py
+        raw_data = None
+        # 2、提取特征值，划分window(num_step)，得到格式为[n, input_size, num_step]矩阵：chart.py
+        moving_features = None  # 从raw_data中生成。
+        moving_labels = None  # 从raw_data中生成。
+        # 3、训练集转置并转化为类，[batch_size, num_step, input_size]矩阵：dataset.py
+        moving_features = numpy.asarray(moving_features)
+        moving_features = numpy.transpose(moving_features, [0, 2, 1])
+        moving_labels = numpy.asarray(moving_labels)
+        moving_labels = numpy.reshape(moving_labels, [moving_labels.shape[0], 1])
+        val_set = None
+        # 4、创建LSTM_model类实例，执行predice函数
+        predict(val_set, num_step=num_step, input_size=input_size, learning_rate=learning_rate,
+                hidden_size=hidden_size, nclassess=nclasses)
