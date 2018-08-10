@@ -1,0 +1,68 @@
+LSTM框架构建简述--tensorflow
+
+1、设定参数，基本包括：
+
+   num_step，input_size，batch_size, hidden_size，num_layers,
+   learning_rate，keep_prob, targets, pred, summary_op等
+
+2、graph构架:
+
+   a) 初始化变量，可选tf.Variable()、tf.placeholder()等，基本包括：
+      learning_rate，inputs，outputs，weights，bias, 其中:
+        inputs.shape = [num_inputs, num_step, input_size]
+        weights.shape = [hidden_size, nclasses]
+        bias.shape = [nclasses, 1]
+
+   b）创建 LSTM 单元，设置输入inputs、输出outputs 与 状态 state。其中：
+
+      构建函数：
+          lstm_cell = tf.contrib.rnn.LSTMCell()
+          dropout_cell = DropoutWrapper(lstm_cell, input_keep_prob=self.keep_prob,...)
+          multi_cell = tf.contrib.rnn.MultiRNNCell([cell1, cell2,...])
+
+      格式：
+          单元输入 inputs 的格式为 num_step 个[batch_size, input_size]矩阵表,
+             inputs = tf.unstack(raw_data,num_step,1)
+
+          单元输出 outputs 的格式为 [batch_size, num_step, hidden_size]
+
+   c) 设定目标输出 target 的计算公式，基本为：
+      pred = tf.matmul(outputs[-1], weights) + bias
+      pred.shape = [num_step, nclasses]
+
+      如有必要，对 preb 进行激化函数处理或标准化处理。
+
+      设定损失函数：
+      loss = tf.reduce_mean(tf.square(pred - targets))
+
+   d) 设置optimizer，优化 learning_rate 和 loss。
+      tf.train.RMSPropOptimizer(learning_rate, name="optimizer").minimize(loss)
+
+   e) 保存训练过程以及参数分布图。
+      tf.summary.scalar("loss", loss)
+      tf.summary.histogram("histogram loss", loss)
+      tf.summary.scalar("predition", pred)
+      tf.summary.histogram("histogram predition", pred)
+      summary_op = tf.summary.merge_all()
+
+3、训练架构
+   a) 设置参数，包括训练集，测试集，batch_size等。
+
+   b) 设定保存类。
+      saver = tf.train.Saver()
+
+      Saver类提供了向checkpoints文件保存和从checkpoints文件中恢复变量的相关方法。
+      Checkpoints文件是一个二进制文件，它把变量名映射到对应的tensor值 。
+
+   c) 打开会话 session，初始化模型的参数，将执行过程的数据写入事件文件，并向graph传入变量数值来执行训练操作，并返回所需数据。
+        训练：
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            writer = tf.summary.FileWriter("./graphs", sess.graph)
+            _, loss, pred, summary = sess.run([model.optimizer, model.loss, model.pred, model.summary_op],
+                                                 feed_dict={"传入训练集数值"})
+
+        测试：
+        同理如上，但传入测试集数值，测试训练参数，保存最优模型。
+
+

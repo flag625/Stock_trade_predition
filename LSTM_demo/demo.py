@@ -198,7 +198,7 @@ def train(model, train_set, val_set, train_steps=10000, batch_size=32, keep_prob
                                                  feed_dict={model.X: batch_features, model.Y: batch_labels,
                                                             model.is_training: True, model.keep_prob: keep_prob})
             writer.add_summary(summary, global_step=i)
-            # 每10次迭代更新损失函数和输出值。
+            # 每10次检查loss，保存最小值loss及参数。
             if i % VERBOSE_STEP == 0:
                 hint = None
                 if i % VALIDATION_STEP == 0:
