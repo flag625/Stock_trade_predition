@@ -86,10 +86,15 @@ class ChartFeature(object):
             self.feature.append(lrocp)
         if feature_type == 'MACD':
             macd, signal, hist = talib.MACD(close, fastperiod=12, slowperiod=26, signalperiod=9)
+
+            # 标准化处理，负值归一化为-1，正值归一化为1，Nan值为0。
             norm_signal = numpy.minimum(numpy.maximum(numpy.nan_to_num(signal), -1), 1)
             norm_hist = numpy.minimum(numpy.maximum(numpy.nan_to_num(hist), -1), 1)
             norm_macd = numpy.minimum(numpy.maximum(numpy.nan_to_num(macd), -1), 1)
 
+            # num.diff():计算离散差值，后一个元素减去前一个元素，shape = [1, macd_n - 1]
+            # numpy.concatenate(): 组合0 和 离散差值 [0, diff]， shape = [1, macd_n]
+            # numpy.minimum(numpy.maximun(x,-1),1):标准化处理，负值归一化为-1，正值归一化为1，Nan值为0。
             zero = numpy.asarray([0])
             macdrocp = numpy.minimum(numpy.maximum(numpy.concatenate((zero, numpy.diff(numpy.nan_to_num(macd)))), -1), 1)
             signalrocp = numpy.minimum(numpy.maximum(numpy.concatenate((zero, numpy.diff(numpy.nan_to_num(signal)))), -1), 1)
@@ -116,6 +121,9 @@ class ChartFeature(object):
             self.feature.append(rsi12rocp)
             self.feature.append(rsi24rocp)
         if feature_type == 'VROCP':
+            # numpy.maximum(x,1)：元素最小值设定为1。
+            # numpy.nan_to_num：Nan值为0。
+            # numpy.arctan：对矩阵a中每个元素取反正切
             vrocp = numpy.arctan(numpy.nan_to_num(talib.ROCP(numpy.maximum(volumes, 1), timeperiod=1)))
             self.feature.append(vrocp)
         if feature_type == 'MA':
@@ -170,6 +178,9 @@ class ChartFeature(object):
             ma180 = numpy.nan_to_num(talib.MA(volumes, timeperiod=180))
             ma360 = numpy.nan_to_num(talib.MA(volumes, timeperiod=360))
             ma720 = numpy.nan_to_num(talib.MA(volumes, timeperiod=720))
+
+            # numpy.nan_to_num：Nan值为0。
+            # numpy.arctan：对矩阵a中每个元素取反正切
             ma5rocp = numpy.arctan(numpy.nan_to_num(talib.ROCP(ma5, timeperiod=1)))
             ma10rocp = numpy.arctan(numpy.nan_to_num(talib.ROCP(ma10, timeperiod=1)))
             ma20rocp = numpy.arctan(numpy.nan_to_num(talib.ROCP(ma20, timeperiod=1)))
@@ -180,6 +191,7 @@ class ChartFeature(object):
             ma180rocp = numpy.arctan(numpy.nan_to_num(talib.ROCP(ma180, timeperiod=1)))
             ma360rocp = numpy.arctan(numpy.nan_to_num(talib.ROCP(ma360, timeperiod=1)))
             ma720rocp = numpy.arctan(numpy.nan_to_num(talib.ROCP(ma720, timeperiod=1)))
+
             self.feature.append(ma5rocp)
             self.feature.append(ma10rocp)
             self.feature.append(ma20rocp)
@@ -190,6 +202,7 @@ class ChartFeature(object):
             self.feature.append(ma180rocp)
             self.feature.append(ma360rocp)
             self.feature.append(ma720rocp)
+
             self.feature.append(numpy.arctan(numpy.nan_to_num((ma5 - volumes) / (volumes + 1))))
             self.feature.append(numpy.arctan(numpy.nan_to_num((ma10 - volumes) / (volumes + 1))))
             self.feature.append(numpy.arctan(numpy.nan_to_num((ma20 - volumes) / (volumes + 1))))
