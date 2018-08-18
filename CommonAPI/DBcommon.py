@@ -11,7 +11,7 @@ from DBUtils.PooledDB import PooledDB
 import configparser
 
 conf = configparser.ConfigParser()
-conf.read("./test.conf")
+conf.read("/Users/cloudin/PycharmProjects/Stock_trade_predition/CommonAPI/test.conf")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 fh = logging.FileHandler(conf.get('log_path', 'log_path'), mode='a')
