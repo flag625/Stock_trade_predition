@@ -49,8 +49,8 @@ class mysql2pd(object):
             self.pwd = pwd
             self.port = port
 
-    def connect(self, host, port, user, pwd, db, chartset='utf8'):
-        pool = PooledDB(pymysql, 5, host=host, port=int(port), user=user, passwd=pwd, db=db, chartset=chartset)
+    def connect(self, host, port, user, pwd, db, charset='utf8'):
+        pool = PooledDB(pymysql, 5, host=host, port=int(port), user=user, passwd=pwd, db=db, charset=charset)
         return pool
 
     def close(self):
