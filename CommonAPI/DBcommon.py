@@ -11,7 +11,14 @@ import configparser
 
 conf = configparser.ConfigParser()
 conf.read("./test.conf")
-# print('测试:{}'.format(conf.get('db_test','host')))
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+fh = logging.FileHandler(conf.get('log_path', 'log_path'), mode='a')
+fh.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+print('测试:{}'.format(conf.get('log_path','log_path')))
 
 class mysql2pd(object):
     def __init__(self, host, port, db, user, pwd, retry_num=3, env_lang='utf8'):
