@@ -17,7 +17,7 @@ fh.setFormatter(formatter)
 logger.addHandler(fh)
 # print('这里是测试内容：{}'.format(conf.get('path','log_path')))
 
-#多线程处理
+#多线程类
 class ThreadFunc(threading.Thread):
     def __init__(self, func, args, name=''):
         threading.Thread.__init__(self)
