@@ -7,7 +7,7 @@ from CommonAPI.DBcommon import mysql2pd
 import configparser
 
 conf = configparser.ConfigParser()
-conf.read("./test.conf")
+conf.read("/Users/cloudin/PycharmProjects/Stock_trade_predition/CommonAPI/test.conf")
 # print(conf.options('log_path'))
 
 class Base():
