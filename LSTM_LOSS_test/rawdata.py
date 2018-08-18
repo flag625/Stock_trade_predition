@@ -3,18 +3,9 @@
 import tushare as ts
 import pandas as pd
 from CommonAPI.base import Base
-import logging.config
-import configparser
+from CommonAPI import loggingData
 
-# conf = configparser.ConfigParser()
-# conf.read("/Users/cloudin/PycharmProjects/Stock_trade_predition/CommonAPI/test.conf")
-# logger = logging.getLogger()
-# logger.setLevel(logging.INFO)
-# fh = logging.FileHandler(conf.get('path','log_path'), mode='a')
-# fh.setLevel(logging.DEBUG)
-# formatter = logging.Formatter("%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
-# fh.setFormatter(formatter)
-# logger.addHandler(fh)
+logger = loggingData()
 
 def stockhistory(code_list, start_date, end_date, conns):
     base = Base()
