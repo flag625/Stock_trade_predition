@@ -16,6 +16,7 @@ def stockhistory(code_list, start_date, end_date, conns):
         res = res.append(df, ignore_index=True)
 
     print(res)
+    base.batchwri(res, 'stock-000001', financial_data)
 
 if __name__ == "__main__":
      base = Base()
