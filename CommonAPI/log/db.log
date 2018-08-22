@@ -4,3 +4,18 @@
 2018-08-22 15:48:56,775 - DBcommon.py[line:110] - INFO: 执行失败：write2mysql
 失败原因：
 2018-08-22 15:48:56,776 - DBcommon.py[line:111] - INFO: 'mysql2pd' object has no attribute 'user'
+2018-08-22 15:55:54,281 - DBcommon.py[line:109] - INFO: 执行失败：write2mysql
+失败原因：
+2018-08-22 15:55:54,282 - DBcommon.py[line:110] - INFO: 'mysql2pd' object has no attribute 'user'
+2018-08-22 15:59:15,404 - DBcommon.py[line:110] - INFO: 执行失败：write2mysql
+失败原因：
+2018-08-22 15:59:15,406 - DBcommon.py[line:111] - INFO: 'mysql2pd' object has no attribute 'user'
+2018-08-22 16:05:27,991 - DBcommon.py[line:110] - INFO: 执行失败：write2mysql
+失败原因：
+2018-08-22 16:05:27,993 - DBcommon.py[line:111] - INFO: 'mysql2pd' object has no attribute 'user'
+2018-08-22 16:05:51,411 - DBcommon.py[line:110] - INFO: 执行失败：write2mysql
+失败原因：
+2018-08-22 16:05:51,413 - DBcommon.py[line:111] - INFO: 'mysql2pd' object has no attribute 'user'
+2018-08-22 16:40:20,851 - DBcommon.py[line:110] - INFO: 执行失败：write2mysql
+失败原因：
+2018-08-22 16:40:20,852 - DBcommon.py[line:111] - INFO: 'qppend' is not valid for if_exists
