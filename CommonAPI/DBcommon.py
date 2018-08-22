@@ -103,7 +103,7 @@ class mysql2pd(object):
         try:
             engine = create_engine("mysql+pymysql://"+self.user+":"+self.pwd+"@"+
                                    self.host+":"+self.port+"/"+self.db+"?charset=utf8")
-            dataframe.to_sql(name=table, con=engine, if_exists='qppend', index=False, index_label=False)
+            dataframe.to_sql(name=table, con=engine, if_exists='append', index=False, index_label=False)
             res = True
         except Exception as e:
             print(e)
