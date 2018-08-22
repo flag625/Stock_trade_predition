@@ -43,11 +43,11 @@ class mysql2pd(object):
                     logger.warning(traceback.format_exc())
                     raise e
                 time.sleep(10)
-            self.db = db
-            self.user = user
-            self.host = host
-            self.pwd = pwd
-            self.port = port
+        self.db = db
+        self.user = user
+        self.host = host
+        self.pwd = pwd
+        self.port = port
 
     def connect(self, host, port, user, pwd, db, charset='utf8'):
         pool = PooledDB(pymysql, 5, host=host, port=int(port), user=user, passwd=pwd, db=db, charset=charset)
