@@ -1,0 +1,6 @@
+2018-08-22 15:41:15,361 - DBcommon.py[line:110] - INFO: 执行失败：write2mysql
+失败原因：
+2018-08-22 15:41:15,362 - DBcommon.py[line:111] - INFO: 'mysql2pd' object has no attribute 'user'
+2018-08-22 15:48:56,775 - DBcommon.py[line:110] - INFO: 执行失败：write2mysql
+失败原因：
+2018-08-22 15:48:56,776 - DBcommon.py[line:111] - INFO: 'mysql2pd' object has no attribute 'user'
