@@ -19,8 +19,8 @@ def stockhistory(code_list, start_date, end_date, conns):
     base.batchwri(res, 'stock-000001', financial_data)
 
 if __name__ == "__main__":
-     base = Base()
-     financial_data = base.conn('financial_data')
-     conns = {'financial_data': financial_data}
-     code_list = ['000001']
-     stockhistory(code_list, '2017-07-01', '2018-07-31', conns)
+    base = Base()
+    financial_data = base.conn('financial_data')
+    conns = {'financial_data': financial_data}
+    code_list = ['000001']
+    stockhistory(code_list, '2017-07-01', '2018-07-31', conns)
