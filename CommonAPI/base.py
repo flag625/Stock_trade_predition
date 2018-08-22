@@ -14,7 +14,7 @@ class Base():
     def __init__(self):
         self.dbconfig = {
             'financial_data':(conf.get('db_test','host'), conf.get('db_test','port'),conf.get('db_test','db'),
-                              conf.get('db_test', 'user'), conf.get('db_test','pwd')),
+                              conf.get('db_test','user'), conf.get('db_test','pwd')),
         }
 
     def conn(self, db):
