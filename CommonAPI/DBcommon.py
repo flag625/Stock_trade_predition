@@ -99,14 +99,12 @@ class mysql2pd(object):
     def write2mysql(self, dataframe, table):
         self.conn = self.pool.connection()
         self.cursor = self.conn.cursor()
-        res = False
         try:
             engine = create_engine("mysql+pymysql://"+self.user+":"+self.pwd+"@"+
                                    self.host+":"+self.port+"/"+self.db+"?charset=utf8")
             dataframe.to_sql(name=table, con=engine, if_exists='append', index=False, index_label=False)
-            res = True
+            print("执行成功，存储数据！")
         except Exception as e:
             print(e)
             logger.info(u"执行失败：write2mysql\n"+u"失败原因：")
             logger.info(e)
-        return res
