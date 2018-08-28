@@ -66,6 +66,7 @@ class CharFeatures(object):
         return self.feature
 
     def extract_by_type(self, feature_type, open=None, close=None, high=None, low=None, volume=None):
+        # 变化率百分比
         if feature_type == 'ROCP':
             rocp = talib.ROCP(close, timeperiod=1)
             self.feature.append(rocp)
@@ -78,6 +79,8 @@ class CharFeatures(object):
         if feature_type == 'LROCP':
             lrocp = talib.ROCP(low, timeperiod=1)
             self.feature.append(lrocp)
+
+        # 指数平滑移动平均线
         if feature_type == 'MACD':
             macd, signal, hist = talib.MACD(close, fastperiod=12, slowperiod=26, signalperiod=9)
 
@@ -102,6 +105,8 @@ class CharFeatures(object):
             self.feature.append(macdrocp)
             self.feature.append(signalrocp)
             self.feature.append(histrocp)
+
+        # 相对强弱指数
         if feature_type == 'RSI':
             rsi6 = talib.RSI(close, timeperiod=6)
             rsi12 = talib.RSI(close, timeperiod=12)
@@ -121,6 +126,8 @@ class CharFeatures(object):
             # np.arctan：对矩阵a中每个元素取反正切
             vrocp = np.arctan(np.nan_to_num(talib.ROCP(np.maximum(volume, 1), timeperiod=1)))
             self.feature.append(vrocp)
+
+        # 滑动平均
         if feature_type == 'MA':
             ma5 = np.nan_to_num(talib.MA(close, timeperiod=5))
             ma10 = np.nan_to_num(talib.MA(close, timeperiod=10))
@@ -208,6 +215,8 @@ class CharFeatures(object):
             self.feature.append(np.arctan(np.nan_to_num((ma180 - volume) / (volume + 1))))
             self.feature.append(np.arctan(np.nan_to_num((ma360 - volume) / (volume + 1))))
             self.feature.append(np.arctan(np.nan_to_num((ma720 - volume) / (volume + 1))))
+
+        # 价格与成交量
         if feature_type == 'PRICE_VOLUME':
             rocp = talib.ROCP(close, timeperiod=1)
             vrocp = np.arctan(np.nan_to_num(talib.ROCP(np.maximum(volume, 1), timeperiod=1)))
@@ -222,7 +231,7 @@ def extract_features(rawdata, selector, windows=30, with_label=True, flatten=Tru
     highs = []
     lows = []
     volumes = []
-    for item in rawdata:
+    for item in sorted_data:
         closes.append(item.close)
         opens.append(item.open)
         highs.append(item.high)
