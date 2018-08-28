@@ -43,6 +43,16 @@ class CharFeatures(object):
                 p+=1
             return np.asarray(moving_features)
 
+    def feature_distribution(self):
+        k = 0
+        for feature_column in self.feature:
+            fc = np.nan_to_num(feature_column)
+            mean = np.mean(fc)
+            var = np.var(fc)
+            max_value = np.max(fc)
+            min_value = np.min(fc)
+            print("[%s_th feature] mean: %s, var: %s, max: %s, min: %s" % (k, mean, var, max_value, min_value))
+            k = k + 1
 
     def extract(self, open=None, close=None, high=None, low=None, volume=None):
         self.feature = []
@@ -52,6 +62,7 @@ class CharFeatures(object):
                 self.extract_by_type(feature_type, open=open, close=close, high=high, low=low, volume=volume)
             else:
                 print("feature type not supported : %s" %feature_type)
+        self.feature_distribution()
         return self.feature
 
     def extract_by_type(self, feature_type, open=None, close=None, high=None, low=None, volume=None):
