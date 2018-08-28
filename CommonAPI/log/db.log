@@ -19,3 +19,9 @@
 2018-08-22 16:40:20,851 - DBcommon.py[line:110] - INFO: 执行失败：write2mysql
 失败原因：
 2018-08-22 16:40:20,852 - DBcommon.py[line:111] - INFO: 'qppend' is not valid for if_exists
+2018-08-28 09:54:56,327 - DBcommon.py[line:94] - INFO: 执行失败：select * from stock-000001
+失败原因：
+2018-08-28 09:54:56,329 - DBcommon.py[line:95] - INFO: Execution failed on sql 'select * from stock-000001': (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '-000001' at line 1")
+2018-08-28 10:00:52,861 - DBcommon.py[line:94] - INFO: 执行失败：select * from stock-000001
+失败原因：
+2018-08-28 10:00:52,862 - DBcommon.py[line:95] - INFO: Execution failed on sql 'select * from stock-000001': (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '-000001' at line 1")
