@@ -232,17 +232,17 @@ def extract_features(rawdata, selector, windows=30, with_label=True, flatten=Tru
                                                        low=lows, volume=volumes, with_label=with_label, flatten=flatten)
         return moving_features
 
-from CommonAPI.base import Base
-from LSTM_LOSS_test.rawdata import mysql2RawData
-# test
-if __name__ == '__main__':
-    base = Base()
-    financial_data = base.conn('financial_data')
-    conns = {'financial_data': financial_data}
-    rawdata = mysql2RawData('000001', conns)
-    moving_featrues, moving_labels = extract_features(rawdata, ["ROCP", "MACD"])
-    print("moving_featrun: " +str(moving_featrues.shape))
-    print("moving_labels " + str(moving_labels.shape))
+# # test
+# from CommonAPI.base import Base
+# from LSTM_LOSS_test.rawdata import mysql2RawData
+# if __name__ == '__main__':
+#     base = Base()
+#     financial_data = base.conn('financial_data')
+#     conns = {'financial_data': financial_data}
+#     rawdata = mysql2RawData('000001', conns)
+#     moving_featrues, moving_labels = extract_features(rawdata, ["ROCP", "MACD"])
+#     print("moving_featrun: " +str(moving_featrues.shape))
+#     print("moving_labels " + str(moving_labels.shape))
 
 
 
