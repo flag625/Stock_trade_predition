@@ -251,6 +251,7 @@ def main(operation='train'):
     batch_size = None
     learning_rate = None
     hidden_size = None
+    train_steps = None
     nclasses = None
     validation_size = None
     keep_rate = None
@@ -286,7 +287,7 @@ def main(operation='train'):
         # 5、创建LSTM_model类实例，执行train函数
         model = LSTM_model(num_step, input_size, learning_rate, hidden_size, nclasses)
         model.build_graph()
-        train(model, train_set, val_set, train_set, batch_size=batch_size, keep_rate=keep_rate)
+        train(model, train_set, val_set, train_steps, batch_size=batch_size, keep_rate=keep_rate)
     elif operation == "predict":
         # 1、读取原始数据：rawdata.py
         raw_data = None
