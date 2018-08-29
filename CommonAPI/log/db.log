@@ -25,3 +25,5 @@
 2018-08-28 10:00:52,861 - DBcommon.py[line:94] - INFO: 执行失败：select * from stock-000001
 失败原因：
 2018-08-28 10:00:52,862 - DBcommon.py[line:95] - INFO: Execution failed on sql 'select * from stock-000001': (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '-000001' at line 1")
+2018-08-29 16:19:07,260 - tf_logging.py[line:115] - INFO: Summary name histogram loss is illegal; using histogram_loss instead.
+2018-08-29 16:19:07,265 - tf_logging.py[line:115] - INFO: Summary name histogram position is illegal; using histogram_position instead.

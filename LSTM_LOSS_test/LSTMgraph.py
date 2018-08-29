@@ -28,7 +28,7 @@ class LSTMgraph(object):
         self.init_learning_rate = init_learning_rate
         self.learning_rate = None
         self.global_step = None
-        self.decay_step = decay_rate
+        self.decay_step = decay_step
         self.decay_rate = decay_rate
         self.keep_prob = None
         self.batch_size = None

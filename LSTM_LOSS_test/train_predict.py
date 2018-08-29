@@ -14,7 +14,7 @@ def train(tensor, train_set, val_set, train_steps=10000, batch_size=32, keep_pro
     val_features = val_set.images
     val_labels = val_set.labels
     VERBOSE_STEP = 10
-    VALIDATION_STEP = VERBOSE_STEP * 100
+    VALIDATION_STEP = VERBOSE_STEP * 10
     saver = tf.train.Saver()
     min_validation_loss = 100000000.
     with tf.Session() as sess:
@@ -22,7 +22,7 @@ def train(tensor, train_set, val_set, train_steps=10000, batch_size=32, keep_pro
         writer = tf.summary.FileWriter("./graphs", sess.graph)
         for i in range(initial_step, initial_step + train_steps):
             batch_features, batch_labels = train_set.next_batch(batch_size)
-            _, loss, avg_pos, summary = sess.run([tensor.optimizer, tensor.loss, tensor.avg_positon, tensor.summary_op],
+            _, loss, avg_pos, summary = sess.run([tensor.optimizer, tensor.loss, tensor.avg_position, tensor.summary_op],
                                                  feed_dict={tensor.x: batch_features, tensor.y: batch_labels,
                                                             tensor.is_training: True, tensor.keep_prob: keep_prob})
             writer.add_summary(summary, global_step=i)
@@ -30,7 +30,7 @@ def train(tensor, train_set, val_set, train_steps=10000, batch_size=32, keep_pro
             if i % VERBOSE_STEP == 0:
                 hint = None
                 if i % VALIDATION_STEP == 0:
-                    val_loss, val_avg_pos = sess.run([tensor.loss, tensor.avg_positon],
+                    val_loss, val_avg_pos = sess.run([tensor.loss, tensor.avg_position],
                                                      feed_dict={tensor.x: val_features, tensor.y: val_labels,
                                                                 tensor.is_training: False, tensor.keep_prob: keep_prob})
                     hint = "Average Train Loss at step {}: {:.7f} Average position {:.7f}, Validation Loss: {:.7f} " \
@@ -81,7 +81,7 @@ def execute(operation="train", traincodes=None, predcodes=None):
     :return:
     """
     num_step = 30
-    input_size = 61
+    input_size = 58
     batch_size = 32
     learning_rate = 0.001
     hidden_size = 14
@@ -114,9 +114,9 @@ def execute(operation="train", traincodes=None, predcodes=None):
 
         train_features = np.transpose(np.asarray(train_features), [0, 2, 1])
         train_labels = np.asarray(train_labels)
-        train_labels = np.reshape(train_labels, [train_labels[0], 1])
+        train_labels = np.reshape(train_labels, [train_labels.shape[0], 1])
 
-        val_features = np.transpose(np.asarray([val_features]), [0, 2, 1])
+        val_features = np.transpose(np.asarray(val_features), [0, 2, 1])
         val_labels = np.asarray(val_labels)
         val_labels = np.reshape(val_labels, [val_labels.shape[0], 1])
 
@@ -147,3 +147,7 @@ def execute(operation="train", traincodes=None, predcodes=None):
     else:
         print("Operation not supported!")
 
+# test
+if __name__ == "__main__":
+    codes = ['000001']
+    execute(traincodes=codes)
