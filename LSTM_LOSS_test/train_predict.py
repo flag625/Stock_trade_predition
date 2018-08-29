@@ -53,7 +53,7 @@ def predict(val_set, num_step, input_size, learning_rate, hiden_size, nclasses):
         ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoint/checkpint'))
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
-        pred = sess.run([tensor.position, tensor.avg_position],
+        pred, avg_pos = sess.run([tensor.position, tensor.avg_position],
                         feed_dict={tensor.x: featrues, tensor.y: labels,
                                    tensor.is_training: False, tensor.keep_prob: 1.})
         cr = calculate_cumulative_return(labels, pred)
@@ -92,7 +92,7 @@ def execute(operation="train", traincodes=None, predcodes=None):
     selector = ["ROCP", "OROCP", "HROCP", "LROCP", "MACD", "RSI", "VROCP", "BOLL", "MA", "VMA", "PRICE_VOLUME"]
     input_shape = [30, 61]
 
-    if operation == "train":
+    if operation == "train" and traincodes:
         train_features = []
         train_labels = []
         val_features = []
@@ -126,7 +126,7 @@ def execute(operation="train", traincodes=None, predcodes=None):
         tensor = LSTMgraph(num_step, input_size, learning_rate, hidden_size, nclasses)
         tensor.build_graph()
         train(tensor, train_set, val_set, train_steps, batch_size=batch_size, keep_prob=keep_rate)
-    elif operation == "predict":
+    elif operation == "predict" and predcodes:
         base = Base()
         financial_data = base.conn('financial_data')
         conns = {'financial_data': financial_data}
@@ -150,4 +150,4 @@ def execute(operation="train", traincodes=None, predcodes=None):
 # test
 if __name__ == "__main__":
     codes = ['000001']
-    execute(traincodes=codes)
+    execute(operation="predict", predcodes=codes)
