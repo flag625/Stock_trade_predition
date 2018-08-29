@@ -127,9 +127,9 @@ class LSTMgraph(object):
     # 保存训练过程以及参数分布图并在tensorboard显示。
     def _create_summary(self):
         tf.summary.scalar("loss", self.loss)
-        tf.summary.histogram("histogram loss", self.loss)
+        tf.summary.histogram("histogram_loss", self.loss)
         tf.summary.scalar("average_position", self.avg_position)
-        tf.summary.histogram("histogram position", self.position)
+        tf.summary.histogram("histogram_position", self.position)
         self.summary_op = tf.summary.merge_all()
 
     def build_graph(self):
