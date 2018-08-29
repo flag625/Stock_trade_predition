@@ -100,16 +100,17 @@ class LSTMgraph(object):
         :return:
         '''
         # self.x.shape = (batch_size, num_step, input_size)
-        # xx.shape = (num_step, (batch_size, input_size))
+        # xx.shape = [num_step, [batch_size, input_size]]
         xx = tf.unstack(self.x, self.num_step, 1)
         lstm_cell = rnn.LSTMCell(self.hidden_size, forget_bias=1.0, initializer=orthogonal_initializer)
         dropout_cell = DropoutWrapper(lstm_cell, input_keep_prob=self.keep_prob, output_keep_prob=self.keep_prob,
                                       state_keep_prob=self.keep_prob)
+        # outputs.shape = [num_step, [batch_size, hidden_size]]
         outputs, states = rnn.static_rnn(dropout_cell, xx, dtype=tf.float32)
         signal = tf.matmul(outputs[-1], self.weights['out']) + self.biases['out']
         scope = "activation_batch_norm"
         norm_signal = self.batch_norm_layer(signal, scope=scope)
-        # position.shape = [batch_size, num_step, hidden_size]
+
         self.position = tf.nn.relu6(norm_signal, name="relu_limit") / 6.
         self.avg_position = tf.reduce_mean(self.position)
         self.loss = -100. * tf.reduce_mean(tf.multiply((self.y - self.cost), self.position, name="estimated_risk"))
