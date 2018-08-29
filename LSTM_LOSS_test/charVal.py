@@ -75,7 +75,7 @@ class CharFeatures(object):
             self.feature.append(orocp)
         if feature_type == 'HROCP':
             hrocp = talib.ROCP(high, timeperiod=1)
-            self.feature.append(orocp)
+            self.feature.append(hrocp)
         if feature_type == 'LROCP':
             lrocp = talib.ROCP(low, timeperiod=1)
             self.feature.append(lrocp)
