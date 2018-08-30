@@ -48,20 +48,20 @@ class LSTMgraph(object):
         create learning rate
         :return:
         '''
-        with tf.variable_scope("parameter"):
+        with tf.variable_scope("parameter", reuse=tf.AUTO_REUSE):
             self.global_step = tf.Variable(0, trainable=False, name="global_step")
             self.learning_rate = tf.train.exponential_decay(self.init_learning_rate, self.global_step, self.decay_step,
                                                             self.decay_rate, staircase=True, name="learning_rate")
 
     def _create_placeholder(self):
-        with tf.variable_scope("input"):
+        with tf.variable_scope("input", reuse=tf.AUTO_REUSE):
             self.x = tf.placeholder(tf.float32, shape=[None, self.num_step, self.input_size], name="history_feature")
             self.y = tf.placeholder(tf.float32, shape=[None, 1], name="target")
             self.keep_prob = tf.placeholder(tf.float32, name="keep_prob")
             self.is_training = tf.placeholder(tf.bool, name="mode")
 
     def _create_weight(self):
-        with tf.variable_scope("weights"):
+        with tf.variable_scope("weights", reuse=tf.AUTO_REUSE):
             self.weights = {
                 'out': tf.get_variable("weights", [self.hidden_size, self.nclasses],
                                        initializer=tf.random_normal_initializer(mean=0, stddev=0.01, seed=1))
@@ -99,21 +99,22 @@ class LSTMgraph(object):
         c : cost
         :return:
         '''
-        # self.x.shape = (batch_size, num_step, input_size)
-        # xx.shape = [num_step, [batch_size, input_size]]
-        xx = tf.unstack(self.x, self.num_step, 1)
-        lstm_cell = rnn.LSTMCell(self.hidden_size, forget_bias=1.0, initializer=orthogonal_initializer)
-        dropout_cell = DropoutWrapper(lstm_cell, input_keep_prob=self.keep_prob, output_keep_prob=self.keep_prob,
-                                      state_keep_prob=self.keep_prob)
-        # outputs.shape = [num_step, [batch_size, hidden_size]]
-        outputs, states = rnn.static_rnn(dropout_cell, xx, dtype=tf.float32)
-        signal = tf.matmul(outputs[-1], self.weights['out']) + self.biases['out']
-        scope = "activation_batch_norm"
-        norm_signal = self.batch_norm_layer(signal, scope=scope)
+        with tf.variable_scope("loss", reuse=tf.AUTO_REUSE):
+            # self.x.shape = (batch_size, num_step, input_size)
+            # xx.shape = [num_step, [batch_size, input_size]]
+            xx = tf.unstack(self.x, self.num_step, 1)
+            lstm_cell = rnn.LSTMCell(self.hidden_size, forget_bias=1.0, initializer=orthogonal_initializer)
+            dropout_cell = DropoutWrapper(lstm_cell, input_keep_prob=self.keep_prob, output_keep_prob=self.keep_prob,
+                                          state_keep_prob=self.keep_prob)
+            # outputs.shape = [num_step, [batch_size, hidden_size]]
+            outputs, states = rnn.static_rnn(dropout_cell, xx, dtype=tf.float32)
+            signal = tf.matmul(outputs[-1], self.weights['out']) + self.biases['out']
+            scope = "activation_batch_norm"
+            norm_signal = self.batch_norm_layer(signal, scope=scope)
 
-        self.position = tf.nn.relu6(norm_signal, name="relu_limit") / 6.
-        self.avg_position = tf.reduce_mean(self.position)
-        self.loss = -100. * tf.reduce_mean(tf.multiply((self.y - self.cost), self.position, name="estimated_risk"))
+            self.position = tf.nn.relu6(norm_signal, name="relu_limit") / 6.
+            self.avg_position = tf.reduce_mean(self.position)
+            self.loss = -100. * tf.reduce_mean(tf.multiply((self.y - self.cost), self.position, name="estimated_risk"))
 
     def _create_optimizer(self):
         '''
@@ -121,8 +122,9 @@ class LSTMgraph(object):
         最小化损失函数。
         :return:
         '''
-        self.optimizer = tf.train.RMSPropOptimizer(self.learning_rate, name="optimizer").\
-            minimize(self.loss, global_step=self.global_step)
+        with tf.variable_scope("optimizer", reuse=tf.AUTO_REUSE):
+            self.optimizer = tf.train.RMSPropOptimizer(self.learning_rate, name="optimizer").\
+                minimize(self.loss, global_step=self.global_step)
 
     # 保存训练过程以及参数分布图并在tensorboard显示。
     def _create_summary(self):

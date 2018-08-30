@@ -29,3 +29,10 @@
 2018-08-29 16:19:07,265 - tf_logging.py[line:115] - INFO: Summary name histogram position is illegal; using histogram_position instead.
 2018-08-29 16:44:52,724 - tf_logging.py[line:115] - INFO: Restoring parameters from checkpoint/best_model-100
 2018-08-29 16:53:17,550 - tf_logging.py[line:115] - INFO: Restoring parameters from checkpoint/best_model-100
+2018-08-30 10:08:31,752 - DBcommon.py[line:94] - INFO: 执行失败：select * from stock_000002
+失败原因：
+2018-08-30 10:08:31,753 - DBcommon.py[line:95] - INFO: Execution failed on sql 'select * from stock_000002': (1146, "Table 'financial_data.stock_000002' doesn't exist")
+2018-08-30 10:10:36,019 - tf_logging.py[line:115] - INFO: Restoring parameters from checkpoint/best_model-100
+2018-08-30 10:54:07,666 - DBcommon.py[line:94] - INFO: 执行失败：select * from stock_0000005
+失败原因：
+2018-08-30 10:54:07,666 - DBcommon.py[line:95] - INFO: Execution failed on sql 'select * from stock_0000005': (1146, "Table 'financial_data.stock_0000005' doesn't exist")
