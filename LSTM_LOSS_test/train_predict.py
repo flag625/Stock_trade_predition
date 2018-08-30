@@ -19,7 +19,7 @@ def train(tensor, train_set, val_set, train_steps=10000, batch_size=32, keep_pro
     min_validation_loss = 100000000.
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        writer_path = os.path.join(("./stock-" + code), "graphs")
+        writer_path = os.path.join(("./Results/stock-" + code), "graphs")
         writer = tf.summary.FileWriter(writer_path, sess.graph)
         for i in range(initial_step, initial_step + train_steps):
             batch_features, batch_labels = train_set.next_batch(batch_size)
@@ -38,7 +38,7 @@ def train(tensor, train_set, val_set, train_steps=10000, batch_size=32, keep_pro
                            "Average position: {:.7f}".format(i, loss, avg_pos, val_loss, val_avg_pos)
                     if val_loss < min_validation_loss:
                         min_validation_loss = val_loss
-                        ckpt_path = os.path.join(("./stock-" + code), "checkpoint/best_model")
+                        ckpt_path = os.path.join(("./Results/stock-" + code), "checkpoint/best_model")
                         saver.save(sess, ckpt_path, i)
                 else:
                     hint = "Average loss at step {}: {:.7f} Average position {:.7f}".format(i, loss, avg_pos)
@@ -53,7 +53,7 @@ def predict(val_set, num_step, input_size, learning_rate, hiden_size, nclasses, 
         saver = tf.train.Saver()
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
-            ckpt_path = os.path.join(("./stock-" + code), 'checkpoint/checkpint')
+            ckpt_path = os.path.join(("./Results/stock-" + code), 'checkpoint/checkpint')
             ckpt = tf.train.get_checkpoint_state(os.path.dirname(ckpt_path))
             if ckpt and ckpt.model_checkpoint_path:
                 saver.restore(sess, ckpt.model_checkpoint_path)
@@ -160,6 +160,6 @@ def execute(operation="train", traincodes=None, predcodes=None):
 
 # test
 if __name__ == "__main__":
-    # codes = ['000001', '000002', '000004', '000005']
-    # execute(operation="train", traincodes=codes)
-    execute(operation="predict", predcodes=['000001', '000004'])
+    codes = ['000001', '000002', '000004', '000005']
+    execute(operation="train", traincodes=codes)
+    # execute(operation="predict", predcodes=['000001', '000004'])
