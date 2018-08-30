@@ -47,21 +47,23 @@ def train(tensor, train_set, val_set, train_steps=10000, batch_size=32, keep_pro
 def predict(val_set, num_step, input_size, learning_rate, hiden_size, nclasses, code=None):
     featrues = val_set.images
     labels = val_set.labels
-    tensor = LSTMgraph(num_step, input_size, learning_rate, hiden_size, nclasses)
-    tensor.build_graph()
-    saver = tf.train.Saver()
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoint/checkpint'))
-        if ckpt and ckpt.model_checkpoint_path:
-            saver.restore(sess, ckpt.model_checkpoint_path)
-        pred, avg_pos = sess.run([tensor.position, tensor.avg_position],
-                        feed_dict={tensor.x: featrues, tensor.y: labels,
-                                   tensor.is_training: False, tensor.keep_prob: 1.})
-        cr = calculate_cumulative_return(labels, pred)
-        print("changeRate\tpositionAdvice\tprincipal\tcumulativeReturn")
-        for i in range(len(labels)):
-            print(str(labels[i]) + "\t" + str(pred[i]) + "\t" + str(cr[i] + 1.) + "\t" + str(cr[i]))
+    with tf.Graph().as_default():
+        tensor = LSTMgraph(num_step, input_size, learning_rate, hiden_size, nclasses)
+        tensor.build_graph()
+        saver = tf.train.Saver()
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            ckpt_path = os.path.join(("./stock-" + code), 'checkpoint/checkpint')
+            ckpt = tf.train.get_checkpoint_state(os.path.dirname(ckpt_path))
+            if ckpt and ckpt.model_checkpoint_path:
+                saver.restore(sess, ckpt.model_checkpoint_path)
+            pred, avg_pos = sess.run([tensor.position, tensor.avg_position],
+                            feed_dict={tensor.x: featrues, tensor.y: labels,
+                                       tensor.is_training: False, tensor.keep_prob: 1.})
+            cr = calculate_cumulative_return(labels, pred)
+            print("changeRate\tpositionAdvice\tprincipal\tcumulativeReturn")
+            for i in range(len(labels)):
+                print(str(labels[i]) + "\t" + str(pred[i]) + "\t" + str(cr[i] + 1.) + "\t" + str(cr[i]))
 
 def calculate_cumulative_return(labels, preb):
     cr = []
@@ -152,11 +154,12 @@ def execute(operation="train", traincodes=None, predcodes=None):
             validation_size = int(len(moving_features) * validation_prob)
             val_set = DataSet(moving_features[-validation_size:], moving_labels[-validation_size:])
             predict(val_set, num_step=num_step, input_size=input_size, learning_rate=learning_rate,
-                    hiden_size=hidden_size, nclasses=nclasses)
+                    hiden_size=hidden_size, nclasses=nclasses, code=code)
     else:
         print("Operation not supported!")
 
 # test
 if __name__ == "__main__":
-    codes = ['000001', '000002', '000004', '000005']
-    execute(operation="train", traincodes=codes)
+    # codes = ['000001', '000002', '000004', '000005']
+    # execute(operation="train", traincodes=codes)
+    execute(operation="predict", predcodes=['000001', '000004'])

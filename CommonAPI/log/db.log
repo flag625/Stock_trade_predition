@@ -36,3 +36,5 @@
 2018-08-30 10:54:07,666 - DBcommon.py[line:94] - INFO: 执行失败：select * from stock_0000005
 失败原因：
 2018-08-30 10:54:07,666 - DBcommon.py[line:95] - INFO: Execution failed on sql 'select * from stock_0000005': (1146, "Table 'financial_data.stock_0000005' doesn't exist")
+2018-08-30 15:20:26,278 - tf_logging.py[line:115] - INFO: Restoring parameters from ./stock-000001/checkpoint/best_model-300
+2018-08-30 15:20:34,357 - tf_logging.py[line:115] - INFO: Restoring parameters from ./stock-000004/checkpoint/best_model-500
