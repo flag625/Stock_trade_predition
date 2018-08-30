@@ -9,7 +9,7 @@ from LSTM_LOSS_test.rawdata import mysql2RawData
 from LSTM_LOSS_test.charVal import extract_features
 from LSTM_LOSS_test.dataset import DataSet
 
-def train(tensor, train_set, val_set, train_steps=10000, batch_size=32, keep_prob=1.):
+def train(tensor, train_set, val_set, train_steps=10000, batch_size=32, keep_prob=1., code=None):
     initial_step = 1
     val_features = val_set.images
     val_labels = val_set.labels
@@ -19,7 +19,8 @@ def train(tensor, train_set, val_set, train_steps=10000, batch_size=32, keep_pro
     min_validation_loss = 100000000.
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        writer = tf.summary.FileWriter("./graphs", sess.graph)
+        writer_path = os.path.join(("./stock-" + code), "graphs")
+        writer = tf.summary.FileWriter(writer_path, sess.graph)
         for i in range(initial_step, initial_step + train_steps):
             batch_features, batch_labels = train_set.next_batch(batch_size)
             _, loss, avg_pos, summary = sess.run([tensor.optimizer, tensor.loss, tensor.avg_position, tensor.summary_op],
@@ -37,12 +38,13 @@ def train(tensor, train_set, val_set, train_steps=10000, batch_size=32, keep_pro
                            "Average position: {:.7f}".format(i, loss, avg_pos, val_loss, val_avg_pos)
                     if val_loss < min_validation_loss:
                         min_validation_loss = val_loss
-                        saver.save(sess, "./checkpoint/best_model", i)
+                        ckpt_path = os.path.join(("./stock-" + code), "checkpoint/best_model")
+                        saver.save(sess, ckpt_path, i)
                 else:
                     hint = "Average loss at step {}: {:.7f} Average position {:.7f}".format(i, loss, avg_pos)
                 print(hint)
 
-def predict(val_set, num_step, input_size, learning_rate, hiden_size, nclasses):
+def predict(val_set, num_step, input_size, learning_rate, hiden_size, nclasses, code=None):
     featrues = val_set.images
     labels = val_set.labels
     tensor = LSTMgraph(num_step, input_size, learning_rate, hiden_size, nclasses)
@@ -92,44 +94,51 @@ def execute(operation="train", traincodes=None, predcodes=None):
     selector = ["ROCP", "OROCP", "HROCP", "LROCP", "MACD", "RSI", "VROCP", "BOLL", "MA", "VMA", "PRICE_VOLUME"]
     input_shape = [30, 61]
 
-    if operation == "train" and traincodes:
-        train_features = []
-        train_labels = []
-        val_features = []
-        val_labels = []
-        base = Base()
-        financial_data = base.conn('financial_data')
-        conns = {'financial_data': financial_data}
-        for code in traincodes:
-            print("processing code: " + code)
-            raw_data = mysql2RawData(code, conns)
-            moving_features, moving_labels = extract_features(rawdata=raw_data, selector=selector,
-                                                                windows=input_shape[0],
-                                                                with_label=True, flatten=False)
-            validation_size = int(len(moving_features) * validation_prob)
-            train_features.extend((moving_features[: -validation_size]))
-            train_labels.extend(moving_labels[:-validation_size])
-            val_features.extend((moving_features[-validation_size:]))
-            val_labels.extend(moving_labels[-validation_size:])
+    base = Base()
+    financial_data = base.conn('financial_data')
+    conns = {'financial_data': financial_data}
 
-        train_features = np.transpose(np.asarray(train_features), [0, 2, 1])
-        train_labels = np.asarray(train_labels)
-        train_labels = np.reshape(train_labels, [train_labels.shape[0], 1])
+    if operation == "train":
+        if not traincodes:
+            print("ERROR：Missing stock codes！")
+        else:
+            for code in traincodes:
+                print("processing stock code: " + code)
+                raw_data = None
+                try:
+                    raw_data = mysql2RawData(code, conns)
+                except Exception as e:
+                    raise e
+                train_features = []
+                train_labels = []
+                val_features = []
+                val_labels = []
+                moving_features, moving_labels = extract_features(rawdata=raw_data, selector=selector,
+                                                                    windows=input_shape[0],
+                                                                    with_label=True, flatten=False)
+                validation_size = int(len(moving_features) * validation_prob)
+                train_features.extend((moving_features[: -validation_size]))
+                train_labels.extend(moving_labels[:-validation_size])
+                val_features.extend((moving_features[-validation_size:]))
+                val_labels.extend(moving_labels[-validation_size:])
 
-        val_features = np.transpose(np.asarray(val_features), [0, 2, 1])
-        val_labels = np.asarray(val_labels)
-        val_labels = np.reshape(val_labels, [val_labels.shape[0], 1])
+                train_features = np.transpose(np.asarray(train_features), [0, 2, 1])
+                train_labels = np.asarray(train_labels)
+                train_labels = np.reshape(train_labels, [train_labels.shape[0], 1])
 
-        train_set = DataSet(train_features, train_labels)
-        val_set = DataSet(val_features, val_labels)
+                val_features = np.transpose(np.asarray(val_features), [0, 2, 1])
+                val_labels = np.asarray(val_labels)
+                val_labels = np.reshape(val_labels, [val_labels.shape[0], 1])
 
-        tensor = LSTMgraph(num_step, input_size, learning_rate, hidden_size, nclasses)
-        tensor.build_graph()
-        train(tensor, train_set, val_set, train_steps, batch_size=batch_size, keep_prob=keep_rate)
+                train_set = DataSet(train_features, train_labels)
+                val_set = DataSet(val_features, val_labels)
+
+                with tf.Graph().as_default():
+                    tensor = LSTMgraph(num_step, input_size, learning_rate, hidden_size, nclasses)
+                    tensor.build_graph()
+                    train(tensor, train_set, val_set, train_steps, batch_size=batch_size, keep_prob=keep_rate, code=code)
+
     elif operation == "predict" and predcodes:
-        base = Base()
-        financial_data = base.conn('financial_data')
-        conns = {'financial_data': financial_data}
         for code in predcodes:
             print("processing code: " + code)
             raw_data = mysql2RawData(code, conns)
@@ -149,5 +158,5 @@ def execute(operation="train", traincodes=None, predcodes=None):
 
 # test
 if __name__ == "__main__":
-    codes = ['000001']
-    execute(operation="predict", predcodes=codes)
+    codes = ['000001', '000002', '000004', '000005']
+    execute(operation="train", traincodes=codes)
