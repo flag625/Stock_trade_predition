@@ -6,12 +6,12 @@ from CommonAPI.base import Base
 
 class RawData(object):
     def __init__(self, date, open, close, high, low, volume):
-        self.date = date;
-        self.open = open;
-        self.close = close;
-        self.high = high;
-        self.low = low;
-        self.volume = volume;
+        self.date = date
+        self.open = open
+        self.close = close
+        self.high = high
+        self.low = low
+        self.volume = volume
 
 def stockhistory(code_list, start_date, end_date, conns):
     base = Base()
